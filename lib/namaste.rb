@@ -39,10 +39,14 @@ module Namaste
     end
 
     def namaste args = {}
-      namaste_tags(args).map{ |x|
-        t, v = x.split '='
-        [t, x, get_namaste(x)]
-      }
+      namaste_tags(args).map { |x|  get_namaste x }
+    end
+
+    def dirtype
+      namaste(:filter => :type).map do |nam| 
+        matches = /([^_]+)_(\d+)\.(\d+)/.match(nam[:value])  
+	{ :name => matches[0], :major => matches[1], :minor => matches[2] } if matches
+      end
     end
 
     private
@@ -52,8 +56,13 @@ module Namaste
       end
     end
 
-    def get_namaste tag
-      open(File.join(self.path, tag)).read.strip
+    def get_namaste namaste_tag
+      n = {}
+      name, tvalue = namaste_tag.split '='
+      n[:file] = namaste_tag
+      n[:name] = name
+      n[:value] = open(File.join(self.path, namaste_tag)).read.strip
+      n
     end
     
     def make_namaste tag, value
