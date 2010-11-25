@@ -45,7 +45,7 @@ module Namaste
     def dirtype
       namaste(:filter => :type).map do |nam| 
         matches = /([^_]+)_(\d+)\.(\d+)/.match(nam[:value])  
-	{ :name => matches[0], :major => matches[1], :minor => matches[2] } if matches
+	{ :type => nam[:value], :name => matches[1], :major => matches[2], :minor => matches[3] } if matches
       end
     end
 
