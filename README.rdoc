@@ -1,6 +1,6 @@
 = namaste
 
-Description goes here.
+A ruby client implementation of the [[Namaste|http://www.cdlib.org/inside/diglib/namaste/namastespec.html]] specification for directory description with filename-based tags.
 
 == Contributing to namaste
  

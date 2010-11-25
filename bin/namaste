@@ -1,0 +1,42 @@
+#!/usr/bin/ruby
+require 'optparse'
+
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+require 'namaste'
+
+options = {}
+
+optparse = OptionParser.new do |opts|
+   opts.banner = "Usage: namaste [options] [dir]"
+
+   options[:verbose] = false
+   opts.on( '-v', '--verbose', 'Output more information') do
+      options[:verbose] = true
+   end
+
+   options[:filter] = nil
+   opts.on( '-f', '--filter FILTER', 'Filter specific Dublin Kernel tags') do |v|
+      options[:filter] = v
+   end
+
+   # This displays the help screen, all programs are
+   # assumed to have this option.
+   opts.on( '-h', '--help', 'Display this screen' ) do
+     puts opts
+     exit
+   end
+end
+
+optparse.parse!
+
+options[:dir] = ARGV.shift
+options[:dir] ||= Dir.pwd
+
+dir = Namaste::Dir.new options[:dir]
+
+args = {}
+args[:filter] = options[:filter] if options[:filter]
+
+print dir.namaste(args).inspect
+
+print "\n"
