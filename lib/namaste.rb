@@ -1,3 +1,4 @@
+require 'i18n'
 module Namaste
   DUBLIN_KERNEL = { :type => 0, :who => 1, :what => 2, :when => 3, :where => 4 }
   PATTERN = Hash[*Namaste::DUBLIN_KERNEL.map { |k, v| [k, Regexp.new("^#{v}=.*")]}.flatten]
@@ -66,10 +67,15 @@ module Namaste
     end
     
     def make_namaste tag, value
-      encoded_value = nil
-      encoded_value ||= value.parameterize '_' if value.respond_to? :parameterize
-      encoded_value ||= value
-      "%s=%s" % [tag, encoded_value]
+      value = I18n.transliterate value
+      value.gsub!(/[^A-Za-z0-9\-\._]+/, '_')
+      value.gsub!(/_{2,}/, '_')
+      value.gsub!(/^_|_$/, '_')
+      encoded_value = value.downcase
+
+      n = "%s=%s" % [tag, encoded_value]
+      n = n.slice(0...252) + "..." if n.length > 255
+      n
     end
 
   end
