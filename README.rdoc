@@ -14,6 +14,6 @@ A ruby client implementation of the [[Namaste|http://www.cdlib.org/inside/diglib
 
 == Copyright
 
-Copyright (c) 2010 Chris Beer. See LICENSE.txt for
+Copyright (c) 2011 Chris Beer. See LICENSE.txt for
 further details.
 
