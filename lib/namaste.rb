@@ -4,18 +4,19 @@ module Namaste
   PATTERN = Hash[*Namaste::DUBLIN_KERNEL.map { |k, v| [k, Regexp.new("^#{v}=.*")]}.flatten]
   PATTERN_CORE = /^\d=.*/
   PATTERN_EXTENDED = /=.*/
+  
   module Mixin
     def self.included base
       Namaste::DUBLIN_KERNEL.each do |k,v|
         base.class_eval do
-	  define_method(k.to_s) do |*args|
+	        define_method(k.to_s) do |*args|
             namaste(:filter => k)
-	  end
+	        end
 
-	  define_method(k.to_s+'=') do |*args|
-	    set_namaste v, *args
-	  end
-	end
+	        define_method(k.to_s+'=') do |*args|
+	          set_namaste v, *args
+	        end
+	      end
       end
     end
     
@@ -24,11 +25,11 @@ module Namaste
       rgx = nil
       
       if args[:filter]
-	if Namaste::PATTERN.key? args[:filter].to_sym
+	      if Namaste::PATTERN.key? args[:filter].to_sym
           rgx = Namaste::PATTERN[args[:filter].to_sym] 
-	else
+	      else
           rgx = Regexp.new("^#{args[:filter]}=.*")
-	end
+	      end
       else 
         rgx = Namaste::PATTERN_CORE
         rgx = Regexp(rgx, Namaste::PATTERN_EXTENDED) if args[:extended]
@@ -46,7 +47,7 @@ module Namaste
     def dirtype
       namaste(:filter => :type).map do |nam| 
         matches = /([^_]+)_(\d+)\.(\d+)/.match(nam[:value])  
-	{ :type => nam[:value], :name => matches[1], :major => matches[2], :minor => matches[3] } if matches
+	      { :type => nam[:value], :name => matches[1], :major => matches[2], :minor => matches[3] } if matches
       end
     end
 
@@ -81,6 +82,7 @@ module Namaste
   end
 
   class Dir < ::Dir
-   include Namaste::Mixin
+    include Namaste::Mixin
   end
+  
 end
