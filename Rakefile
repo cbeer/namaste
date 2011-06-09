@@ -1,5 +1,7 @@
+require 'rake'
 require 'rubygems'
 require 'bundler'
+require 'rspec/core/rake_task'
 begin
   Bundler.setup(:default, :development)
 rescue Bundler::BundlerError => e
@@ -7,41 +9,35 @@ rescue Bundler::BundlerError => e
   $stderr.puts "Run `bundle install` to install missing gems"
   exit e.status_code
 end
-require 'rake'
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
-  gem.name = "namaste"
-  gem.homepage = "http://github.com/cbeer/namaste"
-  gem.license = "MIT"
-  gem.summary = "A ruby client implementation of the Namaste specification for directory description with filename-based tags."
-  gem.email = "chris@cbeer.info"
-  gem.authors = ["Chris Beer"]
+Bundler::GemHelper.install_tasks
+
+namespace :namaste do
+  RSpec::Core::RakeTask.new(:rspec) do |t|
+    t.pattern = "./spec/**/*_spec.rb"
+    t.rcov = true
+    t.rcov_opts = ["--exclude", "gems\/,spec\/"]
+  end
+
+  # Use yard to build docs
+  begin
+    require 'yard'
+    require 'yard/rake/yardoc_task'
+    project_root = File.expand_path("#{File.dirname(__FILE__)}")
+    doc_destination = File.join(project_root, 'doc')
+
+    YARD::Rake::YardocTask.new(:doc) do |yt|
+      yt.files   = Dir.glob(File.join(project_root, 'lib', '**', '*.rb')) + 
+                   [ File.join(project_root, 'README.textile') ]
+      yt.options = ['--output-dir', doc_destination, '--readme', 'README.textile']
+    end
+  rescue LoadError
+    desc "Generate YARD Documentation"
+    task :doc do
+      abort "Please install the YARD gem to generate rdoc."
+    end
+  end
 end
-Jeweler::RubygemsDotOrgTasks.new
 
-require 'rake/testtask'
-Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
-end
-
-require 'rcov/rcovtask'
-Rcov::RcovTask.new do |test|
-  test.libs << 'test'
-  test.pattern = 'test/**/test_*.rb'
-  test.verbose = true
-end
-
-task :default => :test
-
-require 'rake/rdoctask'
-Rake::RDocTask.new do |rdoc|
-  version = File.exist?('VERSION') ? File.read('VERSION') : ""
-
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "namaste #{version}"
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
-end
+desc "Run the rspec tests, aggregate coverage data, and build the Yard docs"
+task :hudson => ["namaste:rspec","namaste:doc"]
