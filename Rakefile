@@ -23,7 +23,7 @@ namespace :namaste do
   begin
     require 'yard'
     require 'yard/rake/yardoc_task'
-    project_root = File.expand_path("#{File.dirname(__FILE__)}/../../")
+    project_root = File.expand_path("#{File.dirname(__FILE__)}")
     doc_destination = File.join(project_root, 'doc')
 
     YARD::Rake::YardocTask.new(:doc) do |yt|
