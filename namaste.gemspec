@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
 
   s.add_dependency("i18n")
+  s.add_development_dependency("rake")
   s.add_development_dependency("rcov")
   s.add_development_dependency("bundler", "~>1.0.0")
   s.add_development_dependency("rspec", ">2.0.0")
