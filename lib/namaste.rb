@@ -4,22 +4,22 @@ module Namaste
   PATTERN = Hash[*Namaste::DUBLIN_KERNEL.map { |k, v| [k, Regexp.new("^#{v}=.*")]}.flatten]
   PATTERN_CORE = /^\d=.*/
   PATTERN_EXTENDED = /=.*/
-  module Mixin
-    def self.included base
-      Namaste::DUBLIN_KERNEL.each do |k,v|
-        base.class_eval do
-	  define_method(k.to_s) do |*args|
-            namaste(:filter => k)
-	  end
 
-	  define_method(k.to_s+'=') do |*args|
-	    set_namaste v, *args
-	  end
-	end
-      end
+  class Dir < ::Dir
+    def namaste selector = nil
+      @namaste ||= Namaste::Base.new(self)
+      @namaste[selector]
     end
-    
-    def namaste_tags args = {}
+  end
+
+  class Base
+    attr_reader :dir
+
+    def initialize dir
+      @dir = dir
+    end
+
+    def [] key=nil
       tags = []
       rgx = nil
       
@@ -39,48 +39,79 @@ module Namaste
       tags |= self.select { |x| x =~ rgx  }
     end
 
-    def namaste args = {}
-      namaste_tags(args).map { |x|  get_namaste x }
-    end
+    def []= key, value
 
-    def dirtype
-      namaste(:filter => :type).map do |nam| 
-        matches = /([^_]+)_(\d+)\.(\d+)/.match(nam[:value])  
-	{ :type => nam[:value], :name => matches[1], :major => matches[2], :minor => matches[3] } if matches
-      end
     end
+  end
 
-    private
-    def set_namaste tag, value
-      File.open(File.join(self.path, make_namaste(tag, value)), 'w') do |f|
-        f.write(value)
-      end
-    end
-
-    def get_namaste namaste_tag
-      n = {}
-      name, tvalue = namaste_tag.split '='
-      n[:file] = namaste_tag
-      n[:name] = name
-      n[:value] = open(File.join(self.path, namaste_tag)).read.strip
+  module Tag
+    def self.filename tag, value
+      n = "%s=%s" % [tag, self.elide(value)]
+      n = n.slice(0...252) + "..." if n.length > 255
       n
     end
-    
-    def make_namaste tag, value
+
+    class Base
+      attr_accessor :dir, :tag
+      def initialize dir, tag
+        @file = file
+        @tag = tag
+        load_tag_modules
+      end
+
+      def set value
+        write!
+      end
+
+      def get
+        read!
+      end
+
+      private
+      def write! value
+        File.open(File.join(self.path, Tag.filename(value)), 'w') do |f|
+          f.write(value)
+        end
+      end
+
+      def read!
+        open(file).read.strip
+      end
+
+      def filename value
+        Tag.filename(tag, value)
+      end
+
+      def elide value
+        Tag.elide(value)
+      end
+
+      def load_tag_modules
+        case @tag
+          when 0
+            self.extend(Tag::Dirtype)
+        end
+      end
+    end
+
+    module Dirtype
+      def self.extended(base)
+        base.instance_eval do
+          def get
+            matches = /([^_]+)_(\d+)\.(\d+)/.match(read!)  
+	    { :type => nam[:value], :name => matches[1], :major => matches[2], :minor => matches[3] } if matches
+          end
+        end
+      end
+    end
+
+    protected
+    def self.elide value
       value = I18n.transliterate value
       value.gsub!(/[^A-Za-z0-9\-\._]+/, '_')
       value.gsub!(/_{2,}/, '_')
       value.gsub!(/^_|_$/, '_')
       encoded_value = value.downcase
-
-      n = "%s=%s" % [tag, encoded_value]
-      n = n.slice(0...252) + "..." if n.length > 255
-      n
     end
-
-  end
-
-  class Dir < ::Dir
-   include Namaste::Mixin
   end
 end
